@@ -1,0 +1,5 @@
+{
+	title = "Gravitas";
+    description = "An awesome Activator listener!";
+    "compatible-modes" = ("springboard", "application", "lockscreen");
+}

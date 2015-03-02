@@ -1,0 +1,10 @@
+Package: com.phillipt.gravitas
+Name: Gravitas
+Depends: mobilesubstrate, libactivator
+Architecture: iphoneos-arm
+Description: An awesome Activator listener!
+Maintainer: Phillip Tennen
+Author: Phillip Tennen
+Section: Tweaks
+Version: 0.0.1-54+debug
+Installed-Size: 116
