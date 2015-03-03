@@ -4,6 +4,7 @@
 
 NSMutableArray* iconScrollViews;
 NSMutableDictionary* viewPositions;
+NSMutableDictionary* gestRecognizers;
 BOOL isActive;
 
 #pragma mark - Listener
@@ -33,6 +34,7 @@ GravitasListener* globalSelf;
 	DebugLog(@"Listener accepted");
 
 	if (!viewPositions) viewPositions = [[NSMutableDictionary alloc] init];
+	if (!gestRecognizers) gestRecognizers = [[NSMutableDictionary alloc] init];
 
 	if (!_controller) _controller = [[GTController alloc] initWithAffectedViews:nil];
 
@@ -46,6 +48,17 @@ GravitasListener* globalSelf;
 			UIView* view = [iconMap mappedIconViewForIcon:icon];
 			[iconViews addObject:view];
 			[_controller enqueueAffectedView:view];
+
+			NSArray* recs = view.gestureRecognizers;
+			if (![gestRecognizers containsObject:recs]) {
+				[gestRecognizers setObject:recs forKey:[NSValue valueWithNonretainedObject:view]];
+			}
+			for (UIGestureRecognizer* rec in recs) {
+				[view removeGestureRecognizer:rec];
+			}
+
+			UIPanGestureRecognizer* pgr = [[UIPanGestureRecognizer alloc] initWithTarget:view action:@selector(handlePan:)];
+   			[view addGestureRecognizer:pgr];
 
 			//NOTE
 			//-layoutIconsIfNeeded doesn't seem to be working, for some reason
@@ -99,13 +112,7 @@ GravitasListener* globalSelf;
 	%orig;
 }
 */
--(id)initWithDefaultSize {
-	if ((self = %orig)) {
-		UIPanGestureRecognizer* pgr = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-   		[self addGestureRecognizer:pgr];
-	}
-	return self;
-}
+%new
 -(void)handlePan:(UIPanGestureRecognizer*)pgr {
    if (pgr.state == UIGestureRecognizerStateChanged) {
       CGPoint center = pgr.view.center;

@@ -63,6 +63,9 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 }
 
 -(void)beginSimulation {
+	[_animator addBehavior:_gravity];
+	[_animator addBehavior:_collider];
+
 	if (_manager.deviceMotionAvailable) {
     	_manager.deviceMotionUpdateInterval = 0.01f;
     	[_manager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] withHandler:^(CMDeviceMotion *data, NSError *error) {
@@ -82,6 +85,7 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 }
 -(void)endSimulation {
 	[_manager stopDeviceMotionUpdates];
+	[_animator removeAllBehaviors];
 
 	//allow the user to scroll again
     for (UIScrollView* scrollView in iconScrollViews) {
@@ -91,30 +95,31 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
     }
 }
 -(void)resetIconLayout {
-/*
+	for (NSValue* value in gestRecognizers) {
+		SBIconView* view = (SBIconView*)value.nonretainedObjectValue;
+		NSArray* recs = [gestRecognizers objectForKey:value];
+		for (UIGestureRecognizer* rec in recs) {
+			[view addGestureRecognizer:rec];
+		}
+	}
+
 	SBIconView* view = [_affectedViews objectAtIndex:0];
 	SBIconListView *listView = IDWListViewForIcon(view.icon);
 	[listView setIconsNeedLayout];
 	[listView layoutIconsIfNeeded:0.5 domino:YES];
+	[listView layoutIconsNow];
+
+	//view.transform = CGAffineTransformMakeRotation(M_PI_2);
 
 	DebugLog(@"_affectedViews = %@", _affectedViews);
 	DebugLog(@"view = %@", view);
 	DebugLog(@"listView = %@", listView);
-*/
-	//[UIView animateWithDuration:1.0 animations:^{
-		DebugLog(@"viewPositions = %@", viewPositions);
 
-		//why is this not working
-		//:$ :$ :$
-		for (NSValue* value in viewPositions) {
-			//SBIconView* view = (SBIconView*)value.pointerValue;
-			SBIconView* view = (SBIconView*)value.nonretainedObjectValue;
-			DebugLog(@"view.frame = %@", NSStringFromCGRect(view.frame));
-			DebugLog(@"rect = %@", NSStringFromCGRect([[viewPositions objectForKey:value] CGRectValue]));
-			view.frame = [[viewPositions objectForKey:value] CGRectValue];
-			DebugLog(@"new frame = %@", NSStringFromCGRect(view.frame));
-		}
-	//}];
+	for (UIView* view in _affectedViews) {
+		DebugLog(@"transform = %@", NSStringFromCGAffineTransform(view.transform));
+		view.transform = CGAffineTransformIdentity;
+		DebugLog(@"transform = %@", NSStringFromCGAffineTransform(view.transform));
+	}
 
 	[_affectedViews removeAllObjects];
 	[viewPositions removeAllObjects];
