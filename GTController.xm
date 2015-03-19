@@ -33,6 +33,8 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 
     	//make it subject to gravity
     	_gravity = [[UIGravityBehavior alloc] initWithItems:views];
+    	//-9.8m/s is 1.0
+    	_gravity.magnitude = 3.0;
 		[_animator addBehavior:_gravity];
 
 		//change gravity to device orientation
@@ -41,6 +43,7 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
     	//set up collisions with edge of screen
     	_collider = [[UICollisionBehavior alloc] initWithItems:views];
 		_collider.translatesReferenceBoundsIntoBoundary = YES;
+		_collider.collisionMode = UICollisionBehaviorModeEverything;
 		[_animator addBehavior:_collider];
 	}
 	return self;
@@ -118,11 +121,39 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 	for (UIView* view in _affectedViews) {
 		DebugLog(@"transform = %@", NSStringFromCGAffineTransform(view.transform));
 		view.transform = CGAffineTransformIdentity;
-		DebugLog(@"transform = %@", NSStringFromCGAffineTransform(view.transform));
+
+		UIView* label = MSHookIvar<UIView*>(view, "_labelView");
+		label.transform = CGAffineTransformIdentity;
+
+		//fuck this shit
+		//manually set the center of the label
+		label.center = CGPointMake(view.center.x, label.center.y);
 	}
 
+	//wait until layoutIcons: is done
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.55 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+		[listView cleanupAfterRotation];
+
+		for (UIView* view in _affectedViews) {
+			UIView* label = MSHookIvar<UIView*>(view, "_labelView");
+			label.center = CGPointMake(view.center.x, label.center.y);
+			[view _updateLabel];
+		}
+	});
+}
+-(void)prepareForReuse {
 	[_affectedViews removeAllObjects];
 	[viewPositions removeAllObjects];
+	[gestRecognizers removeAllObjects];
+}
+-(void)handlePan:(UIPanGestureRecognizer*)pgr {
+    if (pgr.state == UIGestureRecognizerStateChanged) {
+    	CGPoint center = pgr.view.center;
+     	CGPoint translation = [pgr translationInView:pgr.view];
+     	center = CGPointMake(center.x + translation.x, center.y + translation.y);
+    	pgr.view.center = center;
+        [pgr setTranslation:translation inView:pgr.view];
+    }
 }
 
 @end

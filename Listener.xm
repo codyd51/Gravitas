@@ -57,7 +57,7 @@ GravitasListener* globalSelf;
 				[view removeGestureRecognizer:rec];
 			}
 
-			UIPanGestureRecognizer* pgr = [[UIPanGestureRecognizer alloc] initWithTarget:view action:@selector(handlePan:)];
+			UIPanGestureRecognizer* pgr = [[UIPanGestureRecognizer alloc] initWithTarget:_controller action:@selector(handlePan:)];
    			[view addGestureRecognizer:pgr];
 
 			//NOTE
@@ -72,6 +72,7 @@ GravitasListener* globalSelf;
 		DebugLog(@"Ended simulation");
 		[_controller endSimulation];
 		[_controller resetIconLayout];
+		[_controller prepareForReuse];
 		isActive = NO;
 	}
 }
@@ -100,9 +101,67 @@ GravitasListener* globalSelf;
 	}
 	return self;
 }
+-(BOOL)scrollEnabled { return YES; }
+-(BOOL)showsHorizontalScrollIndicator { return YES; }
+-(BOOL)showsVerticalScrollIndicator { return YES; }
 
 %end
 
+//testing
+/*
+@interface SBIconListView : UIView
+- (void)setAssociatedObject:(id)object;
+- (id)associatedObject;
+@end
+
+BOOL hasSetAssociatedObject = NO;
+
+%hook SBIconListView
+-(id)initWithModel:(id)arg1 orientation:(long long)arg2 viewMap:(id)arg3 {
+	UIScrollView* scrollView;
+	if ((self = %orig)) {
+		CGRect mainFrame = [[UIApplication sharedApplication] keyWindow].frame;
+		UIScrollView* scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(self.frame.origin.x, 0, 100, 5562)];
+
+		[self addSubview:scrollView];
+		[self setAssociatedObject:scrollView];
+	}
+	return self;
+}
+-(void)addSubview:(UIView*)view {
+	//we only want this to run if we haven't already set the associated object
+	//else, the scroll view would be adding it to itself
+	if (!hasSetAssociatedObject) {
+		[(UIView*)[self associatedObject] addSubview:view];
+	}
+	else %orig;
+}
+
+%new
+- (void)setAssociatedObject:(id)object {
+    objc_setAssociatedObject(self, @selector(associatedObject), object, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    hasSetAssociatedObject = YES;
+}
+%new
+- (id)associatedObject {
+    return objc_getAssociatedObject(self, @selector(associatedObject));
+}
+%end
+*/
+/*
+%hook SBIconListView
+-(CGRect)frame {
+	CGRect mainFrame = [[UIApplication sharedApplication] keyWindow].frame;
+	return CGRectMake(0, 0, mainFrame.size.width, mainFrame.size.height*2);
+}
+
+-(void)setFrame:(CGRect)frame {
+	CGRect mainFrame = [[UIApplication sharedApplication] keyWindow].frame;
+	%orig(CGRectMake(frame.origin.x, 0, mainFrame.size.width, mainFrame.size.height*2));
+}
+%end
+*/
+/*
 %hook SBIconView
 /*
 - (void)layoutSubviews {
@@ -111,17 +170,16 @@ GravitasListener* globalSelf;
 	}
 	%orig;
 }
-*/
+**
 %new
 -(void)handlePan:(UIPanGestureRecognizer*)pgr {
-   if (pgr.state == UIGestureRecognizerStateChanged) {
-      CGPoint center = pgr.view.center;
-      CGPoint translation = [pgr translationInView:pgr.view];
-      center = CGPointMake(center.x + translation.x, 
-                           center.y + translation.y);
-      pgr.view.center = center;
-      [pgr setTranslation:CGPointZero inView:pgr.view];
-   }
+   	if (pgr.state == UIGestureRecognizerStateChanged) {
+    	CGPoint center = pgr.view.center;
+     	CGPoint translation = [pgr translationInView:pgr.view];
+     	center = CGPointMake(center.x + translation.x, center.y + translation.y);
+    	pgr.view.center = center;
+      //[pgr setTranslation:CGPointZero inView:pgr.view];
+    }
 }
 %end
-
+*/

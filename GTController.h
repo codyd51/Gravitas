@@ -21,4 +21,5 @@ OBJC_EXTERN NSMutableDictionary* gestRecognizers;
 -(void)beginSimulation;
 -(void)endSimulation;
 -(void)resetIconLayout;
+-(void)prepareForReuse;
 @end
