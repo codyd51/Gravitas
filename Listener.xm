@@ -87,6 +87,7 @@ GravitasListener* globalSelf;
 
 #pragma mark - Hooks
 
+/*
 %ctor {
 	iconScrollViews = [[NSMutableArray alloc] init];
 }
@@ -107,8 +108,6 @@ GravitasListener* globalSelf;
 
 %end
 
-//testing
-/*
 @interface SBIconListView : UIView
 - (void)setAssociatedObject:(id)object;
 - (id)associatedObject;
