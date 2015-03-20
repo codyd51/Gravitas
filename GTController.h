@@ -1,9 +1,5 @@
 #import <CoreMotion/CoreMotion.h>
 
-OBJC_EXTERN NSMutableArray* iconScrollViews;
-OBJC_EXTERN NSMutableDictionary* viewPositions;
-OBJC_EXTERN NSMutableDictionary* gestRecognizers;
-
 @interface GTController : NSObject {
 	NSMutableArray* _affectedViews;
 	CMMotionManager* _manager;

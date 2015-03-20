@@ -1,11 +1,7 @@
 #import "libactivator.h"
 #import "GTController.h"
 #import "DebugLog.h"
-
-NSMutableArray* iconScrollViews;
-NSMutableDictionary* viewPositions;
-NSMutableDictionary* gestRecognizers;
-BOOL isActive;
+#import "GTSpringBoardInteractor.h"
 
 #pragma mark - Listener
 
@@ -33,12 +29,14 @@ GravitasListener* globalSelf;
 -(void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event {
 	DebugLog(@"Listener accepted");
 
-	if (!viewPositions) viewPositions = [[NSMutableDictionary alloc] init];
-	if (!gestRecognizers) gestRecognizers = [[NSMutableDictionary alloc] init];
+	GTSpringBoardInteractor* interactor = [GTSpringBoardInteractor sharedInstance];
+
+	if (!interactor.viewPositions) interactor.viewPositions = [[NSMutableDictionary alloc] init];
+	if (!interactor.gestureRecognizers) interactor.gestureRecognizers = [[NSMutableDictionary alloc] init];
 
 	if (!_controller) _controller = [[GTController alloc] initWithAffectedViews:nil];
 
-	if (!isActive) {
+	if (!interactor.isActive) {
 		DebugLog(@"Started simulation");
 		NSArray* icons = [[[%c(SBIconController) sharedInstance] currentRootIconList] icons];
 		NSMutableArray* iconViews = [[NSMutableArray alloc] init];
@@ -50,8 +48,8 @@ GravitasListener* globalSelf;
 			[_controller enqueueAffectedView:view];
 
 			NSArray* recs = view.gestureRecognizers;
-			if (![gestRecognizers containsObject:recs]) {
-				[gestRecognizers setObject:recs forKey:[NSValue valueWithNonretainedObject:view]];
+			if (![interactor.gestureRecognizers containsObject:recs]) {
+				[interactor.gestureRecognizers setObject:recs forKey:[NSValue valueWithNonretainedObject:view]];
 			}
 			for (UIGestureRecognizer* rec in recs) {
 				[view removeGestureRecognizer:rec];
@@ -63,17 +61,17 @@ GravitasListener* globalSelf;
 			//NOTE
 			//-layoutIconsIfNeeded doesn't seem to be working, for some reason
 			//so, we save each icon's position before modifying it
-			[viewPositions setObject:[NSValue valueWithCGRect:view.frame] forKey:[NSValue valueWithNonretainedObject:view]];
+			[interactor.viewPositions setObject:[NSValue valueWithCGRect:view.frame] forKey:[NSValue valueWithNonretainedObject:view]];
 		}
 		[_controller beginSimulation];
-		isActive = YES;
+		interactor.isActive = YES;
 	}
 	else {
 		DebugLog(@"Ended simulation");
 		[_controller endSimulation];
 		[_controller resetIconLayout];
 		[_controller prepareForReuse];
-		isActive = NO;
+		interactor.isActive = NO;
 	}
 }
 

@@ -5,6 +5,7 @@ include theos/makefiles/common.mk
 TWEAK_NAME = Gravitas
 Gravitas_FILES = Listener.xm
 Gravitas_FILES += GTController.xm
+Gravitas_FILES += GTSpringBoardInteractor.m
 
 Gravitas_LIBRARIES = activator
 

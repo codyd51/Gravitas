@@ -1,6 +1,7 @@
 #import "GTController.h"
 #import "DebugLog.h"
 #import <CoreMotion/CoreMotion.h>
+#import "GTSpringBoardInteractor.h"
 
 @interface SBIconListView : UIView
 @end
@@ -79,7 +80,7 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
     	}];
 
     	//stop the user from scrolling past this page
-    	for (UIScrollView* scrollView in iconScrollViews) {
+    	for (UIScrollView* scrollView in [[GTSpringBoardInteractor sharedInstance] iconScrollViews]) {
     		//invert whatever theyre at now
     		//should I just set them to NO/YES?
     		scrollView.scrollEnabled = NO;
@@ -91,16 +92,16 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 	[_animator removeAllBehaviors];
 
 	//allow the user to scroll again
-    for (UIScrollView* scrollView in iconScrollViews) {
+    for (UIScrollView* scrollView in [[GTSpringBoardInteractor sharedInstance] iconScrollViews]) {
     	//invert whatever theyre at now
     	//should I just set them to NO/YES?
     	scrollView.scrollEnabled = YES;
     }
 }
 -(void)resetIconLayout {
-	for (NSValue* value in gestRecognizers) {
+	for (NSValue* value in [[GTSpringBoardInteractor sharedInstance] gestureRecognizers]) {
 		SBIconView* view = (SBIconView*)value.nonretainedObjectValue;
-		NSArray* recs = [gestRecognizers objectForKey:value];
+		NSArray* recs = [[[GTSpringBoardInteractor sharedInstance] gestureRecognizers] objectForKey:value];
 		for (UIGestureRecognizer* rec in recs) {
 			[view addGestureRecognizer:rec];
 		}
@@ -143,8 +144,8 @@ static SBIconListView *IDWListViewForIcon(SBIcon *icon) {
 }
 -(void)prepareForReuse {
 	[_affectedViews removeAllObjects];
-	[viewPositions removeAllObjects];
-	[gestRecognizers removeAllObjects];
+	[[[GTSpringBoardInteractor sharedInstance] viewPositions] removeAllObjects];
+	[[[GTSpringBoardInteractor sharedInstance] gestureRecognizers] removeAllObjects];
 }
 -(void)handlePan:(UIPanGestureRecognizer*)pgr {
     if (pgr.state == UIGestureRecognizerStateChanged) {
